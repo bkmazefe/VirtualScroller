@@ -1,3 +1,4 @@
+--!nonstrict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Fusion
@@ -46,8 +47,9 @@ return function(props: props)
 	local itemWidthScale = props.ItemWidthScale
 
 	local Items = Computed(function()
-		local canvasPos, windowSize, height, widthScale = CanvasPosition:get(), WindowSize:get(), itemHeight:get(), itemWidthScale:get()
-		local horizontalFit = 1 / itemWidthScale:get()
+		local canvasPos, windowSize, height, widthScale =
+			CanvasPosition:get(), WindowSize:get(), itemHeight:get(), itemWidthScale:get()
+		local horizontalFit = 1 / widthScale:get()
 
 		local minIndex = 0
 		local maxIndex = -1
@@ -82,7 +84,7 @@ return function(props: props)
 		Size = props.Size or UDim2.fromScale(1, 1),
 		Position = props.Position or UDim2.new(),
 		BorderSizePixel = props.BorderSizePixel or 0,
-		BorderColor3 = Color3.fromRGB(10,10,13),
+		BorderColor3 = Color3.fromRGB(10, 10, 13),
 		BackgroundColor3 = Color3.fromRGB(46, 46, 46),
 		ScrollBarImageColor3 = Color3.fromRGB(64, 64, 64),
 		ScrollBarThickness = 12,
@@ -90,7 +92,7 @@ return function(props: props)
 		BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
 		MidImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
 		TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
-		
+
 		CanvasSize = Computed(function()
 			return UDim2.fromOffset(0, fullCanvasSize:get())
 		end),
@@ -115,25 +117,30 @@ return function(props: props)
 		[Children] = {
 			ForPairs(Items, function(i)
 				return i,
-				New("Frame")({
-					Name = "Index_" .. i,
-					LayoutOrder = i,
-					Size = Computed(function()
-						return UDim2.new(itemWidthScale:get(), 0, 0, itemHeight:get())
-					end),
-					Position = Computed(function()
-						local horizontalFit = 1 / itemWidthScale:get()
-						return UDim2.new(itemWidthScale:get() * ((i - 1) % horizontalFit), 0, 0, math.floor((i - 1) / horizontalFit) * itemHeight:get())
-					end),
-					BackgroundTransparency = props._debug and 0.5 or 1,
-					BackgroundColor3 = Color3.fromRGB(
-						math.random(10, 255),
-						math.random(10, 255),
-						math.random(10, 255)
-					),
+					New("Frame")({
+						Name = "Index_" .. i,
+						LayoutOrder = i,
+						Size = Computed(function()
+							return UDim2.new(itemWidthScale:get(), 0, 0, itemHeight:get())
+						end),
+						Position = Computed(function()
+							local horizontalFit = 1 / itemWidthScale:get()
+							return UDim2.new(
+								itemWidthScale:get() * ((i - 1) % horizontalFit),
+								0,
+								0,
+								math.floor((i - 1) / horizontalFit) * itemHeight:get()
+							)
+						end),
+						BackgroundTransparency = props._debug and 0.5 or 1,
+						BackgroundColor3 = Color3.fromRGB(
+							math.random(10, 255),
+							math.random(10, 255),
+							math.random(10, 255)
+						),
 
-					[Children] = props.RenderItem(i),
-				})
+						[Children] = props.RenderItem(i),
+					})
 			end, Fusion.cleanup),
 		},
 	})
