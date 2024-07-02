@@ -25,16 +25,16 @@ see also:
 -- Component
 
 export type props = {
-	Visible: boolean?,
-	Size: UDim2?,
-	CanvasPosition: Fusion.Value<Vector2>,
+	AnchorPoint: Vector2?,
 	Position: UDim2?,
+	Size: UDim2?,
+	Visible: boolean?,
 	ItemCount: Fusion.Value<number>,
 	ItemHeight: Fusion.Value<number>,
 	ItemWidthScale: Fusion.Value<number>,
+	CanvasPosition: Fusion.Value<Vector2>,
+	Deviation: number?,
 	RenderItem: (index: number) -> Instance?,
-	AnchorPoint: Vector2?,
-	BorderSizePixel: number?,
 	_debug: boolean?,
 }
 
@@ -46,24 +46,26 @@ return function(props: props)
 	local itemHeight = props.ItemHeight
 	local itemWidthScale = props.ItemWidthScale
 
+	local deviation = props.Deviation or 1
+
 	local Items = Computed(function()
+		local numberOfItems = numItems:get()
 		local canvasPos, windowSize, height, widthScale =
 			CanvasPosition:get(), WindowSize:get(), itemHeight:get(), itemWidthScale:get()
-		local horizontalFit = 1 / widthScale:get()
+		local horizontalFit = 1 / widthScale
 
 		local minIndex = 0
 		local maxIndex = -1
-		if numItems:get() > 0 then
+		if numberOfItems > 0 then
 			minIndex = 1 + math.floor((canvasPos.y / height) * horizontalFit)
 			maxIndex = math.ceil(((canvasPos.y + windowSize.y) / height) * horizontalFit)
 			-- Add extra on either side for seamless load
-			local diff = maxIndex - minIndex
-			minIndex = math.clamp(minIndex - diff, 1, numItems:get())
-			maxIndex = math.clamp(maxIndex + diff, 1, numItems:get())
+			local diff = (maxIndex - minIndex) * deviation
+			minIndex = math.clamp(minIndex - diff, 1, numberOfItems)
+			maxIndex = math.clamp(maxIndex + diff, 1, numberOfItems)
 		end
 
-		-- Dict for stable keys
-		local items = table.create(maxIndex - minIndex + 1)
+		local items = {}
 		for i = minIndex, maxIndex do
 			items[i] = true
 		end
@@ -73,7 +75,7 @@ return function(props: props)
 
 	local fullCanvasSize = Computed(function()
 		local horizontalFit = 1 / itemWidthScale:get()
-		return math.ceil(numItems:get() / horizontalFit) * itemHeight:get()
+		return UDim2.fromOffset(0, math.ceil(numItems:get() / horizontalFit) * itemHeight:get())
 	end)
 
 	local Frame
@@ -83,7 +85,6 @@ return function(props: props)
 		Visible = props.Visible == nil and true or props.Visible,
 		Size = props.Size or UDim2.fromScale(1, 1),
 		Position = props.Position or UDim2.new(),
-		BorderSizePixel = props.BorderSizePixel or 0,
 		BorderColor3 = Color3.fromRGB(10, 10, 13),
 		BackgroundColor3 = Color3.fromRGB(46, 46, 46),
 		ScrollBarImageColor3 = Color3.fromRGB(64, 64, 64),
@@ -93,9 +94,7 @@ return function(props: props)
 		MidImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
 		TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
 
-		CanvasSize = Computed(function()
-			return UDim2.fromOffset(0, fullCanvasSize:get())
-		end),
+		CanvasSize = fullCanvasSize,
 		CanvasPosition = CanvasPosition,
 
 		[OnChange("AbsoluteWindowSize")] = function()
@@ -124,9 +123,10 @@ return function(props: props)
 							return UDim2.new(itemWidthScale:get(), 0, 0, itemHeight:get())
 						end),
 						Position = Computed(function()
-							local horizontalFit = 1 / itemWidthScale:get()
+							local widthScale = itemWidthScale:get()
+							local horizontalFit = 1 / widthScale
 							return UDim2.new(
-								itemWidthScale:get() * ((i - 1) % horizontalFit),
+								widthScale * ((i - 1) % horizontalFit),
 								0,
 								0,
 								math.floor((i - 1) / horizontalFit) * itemHeight:get()
