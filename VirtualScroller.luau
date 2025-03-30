@@ -3,6 +3,7 @@ local Fusion = require("@Packages/Fusion")
 local Children = Fusion.Children
 local OnChange = Fusion.OnChange
 local peek = Fusion.peek
+local Out = Fusion.Out
 
 --[[
 see also:
@@ -33,6 +34,7 @@ export type VirtualScrollerProps = {
   AnchorPoint: Vector2?,
   Position: UDim2?,
   Size: UDim2?,
+  frameSize: Fusion.Value<any, Vector2>?,
   Visible: boolean?,
   ItemCount: Fusion.StateObject<number>,
   ItemHeight: Fusion.Value<any, number>,
@@ -94,6 +96,8 @@ return function(scope: any, props: VirtualScrollerProps): ScrollingFrame
 
   local Frame
   Frame = scope:New("ScrollingFrame")({
+    [Out("AbsoluteSize")] = props.frameSize,
+
     ClipsDescendants = not props._debug,
     AnchorPoint = props.AnchorPoint or Vector2.new(0, 0),
     Visible = props.Visible == nil and true or props.Visible,
@@ -147,7 +151,7 @@ return function(scope: any, props: VirtualScrollerProps): ScrollingFrame
 
             [Children] = props.RenderItem(use, scope, i),
           })
-      end, Fusion.doCleanup),
+      end),
     },
   })
 
