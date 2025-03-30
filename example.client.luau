@@ -19,6 +19,15 @@ end)
 local item_height = scope:Value(150)
 local item_width_scale = scope:Value(0.25)
 
+local frame_size = scope:Value(Vector2.new(0, 0))
+local frame_height = scope:Value(0)
+
+scope:Observer(frame_size):onChange(function()
+	frame_height:set(peek(frame_size).Y)
+end)
+
+local ROWS = 4
+
 local function render_item(use: Fusion.Use, scope: any, index: number): Frame?
 	local item = use(items)[index]
 	
@@ -52,9 +61,12 @@ scope:New("ScreenGui"){
 				AnchorPoint = nil, -- Vector2?
 				Position = nil, -- UDim2?
 				Size = nil, -- UDim2?
+				frameSize = frame_size,
 				Visible = true, -- boolean?
 				ItemCount = item_count,  -- Fusion.StateObject<number>
-				ItemHeight = item_height, -- Fusion.Value<any, number>
+				ItemHeight = scope:Computed(function(use)
+					return use(frame_height) / ROWS
+				end), -- Fusion.Value<any, number>
 				ItemWidthScale = item_width_scale, -- Fusion.Value<any, number>
 				CanvasPosition = scope:Value(Vector2.new()), -- Fusion.Value<any, Vector2>
 				Deviation = nil, -- number? (default to 0)
